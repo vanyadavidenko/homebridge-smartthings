@@ -1,9 +1,5 @@
 # homebridge-smartthings
 
-NOTE! This is a fairly major redesign that is going to make it much easier to customize how your devices are discovered and improve the reliability of the final UUID in HomeKit so they quit disappearing.
-Right now this branch does NOT work. I just want to give people a chance to see what I'm doing as early as possible. It won't be long and all that will be left is to finish out the DeviceTemplates.json file to be a more complete definition of how devices should be discovered.
-
-
 [![npm version](https://badge.fury.io/js/homebridge-smartthings.svg)](https://badge.fury.io/js/homebridge-smartthings)
 Current Smartapp version - 0.5.2
 

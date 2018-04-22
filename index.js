@@ -1,5 +1,3 @@
-var fs = require('fs')
-var path = require('path')
 var PubNub = require('pubnub')
 var smartthings = require('./lib/smartthingsapi');
 var http = require('http')
@@ -15,6 +13,8 @@ module.exports = function (homebridge) {
 	Accessory = homebridge.hap.Accessory;
 	uuid = homebridge.hap.uuid;
 
+	SmartThingsAccessory = require('./accessories/smartthings')(Accessory, Service, Characteristic, uuid);
+
 	homebridge.registerPlatform("homebridge-smartthings", "SmartThings", SmartThingsPlatform);
 };
 
@@ -23,7 +23,10 @@ function SmartThingsPlatform(log, config) {
 	this.app_url = config["app_url"];
 	this.app_id = config["app_id"];
 	this.access_token = config["access_token"];
-    this.excludedCapabilities = config["excluded_capabilities"]||{};
+	
+	// Load device capability exclusions
+    this.excludedCapabilities = config["excluded_capabilities"];
+	if (!this.excludedCapabilities) this.excludedCapabilities = [];
 
 	//This is how often it does a full refresh
 	this.polling_seconds = config["polling_seconds"];
@@ -58,111 +61,37 @@ SmartThingsPlatform.prototype = {
 		this.log.debug("Refreshing All Device Data");
 		smartthings.getDevices(function (myList) {
 			that.log.debug("Received All Device Data");
-
-//Load Device Templates
-			var deviceTemplates;
-			try {
-			  deviceTemplates = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'DeviceTemplates.json')));
-			}
-			catch (err) {
-				that.log.error("There was a problem reading your DeviceTemplates.json file.");
-				that.log.error("");
-			  throw err;
-			}
-//Parse any Device Templates identified in the config file. Make sure that user-defined rules are pushed to the front.
-
-function applyTemplate(newDevice, template) {
-	//Add Services if needed
-	for (i=0;i<template.AddServices.length;i++) {
-		var serviceEntry = template.AddServices[i];
-		if (Service[serviceEntry.ServiceName]!==undefined) {
-			var myService = newDevice.getService(Service[serviceEntry.ServiceName]);
-			if (!myService) myService = newDevice.addService(Service[serviceEntry.ServiceName]);		
-			for (j=0;j<template.AddServices[i].AddCharacteristics.length;j++) {
-				var characteristicEntry=template.AddServices[i].AddCharacteristics[j];
-				if (Characteristic[characteristicEntry.name]!==undefined) {
-					var mycharacteristic = myService.getCharacteristic(Characteristic[characteristicEntry.name]);
-					if (characteristicEntry["read"]!==undefined)
-					//Need to define this manually from the config. Must pass a callback to the action.
-					//characteristicEntry["read"]
-					//characteristicEntry["write"]
-
-					
-					thisCharacteristic.on('get', function(callback) { callback(null, parseInt(that.device.attributes.level)); });
-            		thisCharacteristic.on('set', function(value, callback) { that.platform.api.runCommand(callback, that.deviceid, "setLevel", { value1: value }); });
-			
-				}
-			}
-		}
-	}
-	//Add Characteristics.
-	//If a characteristic already exists, don't touch it.
-}
-
-			//Transform List to something slightly more generic. There really isn't much to do with the transform.
-			var rawList = {};
+			// success
 			if (myList && myList.deviceList && myList.deviceList instanceof Array) {
+				var populateDevices = function (devices) {
+					for (var i = 0; i < devices.length; i++) {
+						var device = devices[i];
+						device.excludedCapabilities = that.excludedCapabilities[device.deviceid] || ["None"]
+
+						var accessory = undefined;
+						if (that.deviceLookup[device.deviceid]) {
+							accessory = that.deviceLookup[device.deviceid];
+							accessory.loadData(devices[i]);
+						} else {
+							accessory = new SmartThingsAccessory(that, device);
+
+							if (accessory != undefined) {
+								if ((accessory.services.length <= 1) || (accessory.deviceGroup == "unknown")) {
+									if (that.firstpoll) that.log("Device Skipped - Group " + accessory.deviceGroup + ", Name " + accessory.name + ", ID " + accessory.deviceid + ", JSON: " + JSON.stringify(device));
+								} else {
+									that.log("Device Added - Group " + accessory.deviceGroup + ", Name " + accessory.name + ", ID " + accessory.deviceid)//+", JSON: "+ JSON.stringify(device));
+									that.deviceLookup[accessory.deviceid] = accessory;
+									foundAccessories.push(accessory);
+								}
+							}
+						}
+					}
+				}
 				if (myList && myList.location) {
 					that.temperature_unit = myList.location.temperature_scale;
 				}
-				for (var i = 0; i < myList.deviceList.length; i++) {
-					var stDevice = myList.deviceList[i];
 
-					//Need to create an accessory out of this.
-					var newDevice= new Accessory(stDevice.name, stDevice.deviceid)
-					newDevice.base_uuid=stDevice.deviceid;
-					newDevice.context={};
-					newDevice.context.uuid=stDevice.deviceid;
-					newDevice.context.name=stDevice.name;
-					newDevice.context.typeDescription=stDevice.type;
-					newDevice.context.manufacturer=stDevice.manufacturerName;
-					newDevice.context.model=stDevice.modelName;
-					newDevice.context.attributes=stDevice.attributes;
-					newDevice.context.actions={};
-					for (commandName in stDevice.commands) {
-						var myAction=''
-						if (stDevice.commands[commandName].length==0) {
-							myAction="function() { that.api.runCommand(callback, '"+newDevice.context.uuid+"', '"+commandName+"', { }); }"
-						} else if (stDevice.commands[commandName].length==1) {
-							myAction="function(value1) { that.api.runCommand(callback, '"+newDevice.context.deviceid+"', '"+commandName+"', { value1: value1 }); }";
-						} else if (stDevice.commands[commandName].length==2) {
-							myAction="function(value1, value2) { that.api.runCommand(callback, '"+newDevice.context.deviceid+"', '"+commandName+"', { value1: value1, value2: value2 }); }";
- 						} else if (stDevice.commands[commandName].length==3) {
-							myAction="function(value1, value2, value3) { that.api.runCommand(callback, '"+newDevice.context.deviceid+"', '"+commandName+"', { value1: value1, value2: value2, value3: value3 }); }";
-						}
-						eval("newDevice.context.actions['"+commandName+"']="+myAction);
-					}
-					newDevice.context.basename=stDevice.basename;
-					newDevice.context.capabilities=stDevice.capabilities;
-					newDevice.context.lastTime=stDevice.basename;
-					newDevice.context.status=stDevice.status;
-					newDevice.context.discoveredTemplates=[];
-					var TemplatesToApply = [];
-					//First check by DeviceID
-					if (deviceTemplates.TemplateRulesByDeviceID[newDevice.context.uuid]!==undefined)
-						newDevice.context.discoveredTemplates=deviceTemplates.TemplateRulesByDeviceID[newDevice.context.uuid]
-					//Now check by Device Type. This equates to the ST app that controls the device.
-					else if (deviceTemplates.TemplateRulesByDeviceType[newDevice.context.typeDescription]!==undefined)
-						newDevice.context.discoveredTemplates=deviceTemplates.TemplateRulesByDeviceType[newDevice.context.typeDescription]
-					//Now check through interrogation. This is the array of rules to determine the right thing to assign.
-					else {
-						for (j=0; j<deviceTemplates.TemplateRulesByDeviceInterrogation.length; j++) {
-							var myFunction = function(device) { return false };
-							eval("myFunction = function(device) { "+deviceTemplates.TemplateRulesByDeviceInterrogation[j].InterrogationFunction+" };")
-							if (myFunction(newDevice.context)) //Runs the user-defined funtion. Need to add some kind of error trapping...
-								newDevice.context.discoveredTemplates=newDevice.context.discoveredTemplates.concat(deviceTemplates.TemplateRulesByDeviceInterrogation.Templates);
-						}
-					}
-
-					if (newDevice.context.discoveredTemplates.length>0) {
-						for (myTemplate in newDevice.context.discoveredTemplates)
-							applyTemplate(newDevice,deviceTemplates.Templates[newDevice.context.discoveredTemplates[myTemplate]]);
-						rawList[newDevice.context.uuid]=applyTemplate;
-						console.log("Discovered device: "+newDevice.context.name);
-					} else {
-						console.log("Unable to discover for device: "+newDevice.context.name);
-					}
-				}				
+				populateDevices(myList.deviceList);
 			} else if ((!myList) || (!myList.error)) {
 				that.log("Invalid Response from API call");
 			} else if (myList.error) {
@@ -173,7 +102,6 @@ function applyTemplate(newDevice, template) {
 			if (callback)
 				callback(foundAccessories)
 			that.firstpoll = false;
-			rawList["d38a5ae8-9533-43cd-b573-f5625aa07695"].context.actions.off();
 		});
 	},
 	accessories: function (callback) {
@@ -193,7 +121,29 @@ function applyTemplate(newDevice, template) {
 
 		smartthings.init(this.app_url, this.app_id, this.access_token);
 
-		this.reloadData();
+		this.reloadData(function (foundAccessories) {
+			that.log("Unknown Capabilities: " + JSON.stringify(that.unknownCapabilities));
+			callback(foundAccessories);
+			setInterval(that.reloadData.bind(that), that.polling_seconds * 1000);
+			//Initialize Update Mechanism for realtime-ish updates.
+			if (that.update_method==='api') //Legacy API method.
+				setInterval(that.doIncrementalUpdate.bind(that), that.update_seconds * 1000);
+
+			else if (that.update_method==='pubnub') { //Uses user's PubNub account
+				that.api.getSubscriptionService(function(data) {
+					pubnub = new PubNub({ subscribeKey : data.pubnub_subscribekey, ssl: true });
+					pubnub.addListener({
+							status: function(statusEvent) { if (statusEvent.category==='PNReconnectedCategory') that.reloadData(null); },
+							message: function(message) { that.processFieldUpdate(message.message, that); } });
+        			pubnub.subscribe({ channels: [ that.pubnub_channel ] });
+				});
+			}
+
+			else if (that.update_method=='direct') { //The Hub sends updates to this module using http
+				smartthings_SetupHTTPServer(that);
+				smartthings.startDirect(null,that.direct_ip, that.direct_port);
+			}
+		});
 	},
 	addAttributeUsage: function(attribute, deviceid, mycharacteristic) {
 		if (!this.attributeLookup[attribute])

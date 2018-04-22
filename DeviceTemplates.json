@@ -1,0 +1,84 @@
+{
+    "TemplateRulesByDeviceID": {
+      "uuid1": [
+        "WhiteLight"
+      ],
+      "uuid2": [
+        "LightBulb",
+        "LightBulb_brightness"
+      ]
+    },
+    "TemplateRulesByDeviceType": {
+      "Cree Bulb": ["LightBulb", "LightBulb_brightness"]
+    },
+    "TemplateRulesByDeviceInterrogation": [
+        { "InterrogationFunction": "return (device.attributes['hue']!==undefined)", "Templates": ["LightBulb"] }
+    ],
+    "Templates": {
+      "LightBulb": {
+        "templateType": "Main",
+        "platform": "SmartThings",
+        "AddServices": [
+          {
+            "ServiceName": "Lightbulb",
+            "AddCharacteristics": [
+              {
+                "name": "On",
+                "read": "return (device.attributes.switch == 'on');",
+                "write": "if (value) { device.action.on(); } else { device.action.off() }",
+                "usedAttributes": [
+                  "switch"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "LightBulb_brightness": {
+        "templateType": "Main",
+        "platform": "SmartThings",
+        "AddServices": [
+          {
+            "ServiceName": "Lightbulb",
+            "AddCharacteristics": [
+              {
+                "name": "Brightness",
+                "read": "return (device.attributes.level);",
+                "write": "device.action.setLevel(value);",
+                "usedAttributes": [
+                  "level"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "LightBulb_Color": {
+        "templateName": "LightBulb_Color",
+        "templateType": "Addon",
+        "AddServices": [
+          {
+            "ServiceName": "Lightbulb",
+            "AddCharacteristics": [
+              {
+                "name": "Hue",
+                "read": "return Math.round(device.attributes.hue*3.6);",
+                "write": "device.actions.setHue(Math.round(value/3.6));",
+                "usedAttributes": [
+                  "hue"
+                ]
+              },
+              {
+                "name": "Saturation",
+                "read": "return device.attributes.saturation;",
+                "write": "device.actions.setSaturation(value);",
+                "usedAttributes": [
+                  "saturation"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }

@@ -1,4 +1,15 @@
 # homebridge-smartthings
+This Branch is currently non-functional. I should have it function before the end of April.
+This Branch is the development of the following features:
+    Prevent device's HomeKit UUID from being based on the device Name. This will allow renaming devices without having to setup triggers again and having devices with duplicate names.
+    Upgrade to Homebridge API version 2. This will prevent rooms randomly being lost
+    Introduction of DeviceTemplates and the ability to have user-guided discovery. This will help get the values you want showing up in your Home app.
+    Ability to toggle between SmartThings and Hubitat for API calls. Will also include instruction on how to run the plugin twice on the same Homebridge instance.
+
+Future development:
+    Web interface for controling device translations.
+    Upgrade to the non-yet-existing Homebridge API version 3. I'm hoping to take my DeviceTemplate work into the main homebridge application to give users more and simpler flexibility.
+
 
 [![npm version](https://badge.fury.io/js/homebridge-smartthings.svg)](https://badge.fury.io/js/homebridge-smartthings)
 Current Smartapp version - 0.5.2

@@ -73,7 +73,11 @@ SmartThingsPlatform.prototype = {
 
 function applyTemplate(newDevice, template) {
 	//Add Services if needed
-	for (i=0;i<template.AddServices.length;i++) {
+	if (template===undefined) return;
+	if (!template.AddServices) template.AddServices={};
+	if (!template.GetServices) template.GetServices={};
+	
+	for (var i=0;i<template.AddServices.length;i++) {
 		var serviceEntry = template.AddServices[i];
 		if (Service[serviceEntry.ServiceName]!==undefined) {
 			var myService = newDevice.getService(Service[serviceEntry.ServiceName]);
@@ -82,15 +86,16 @@ function applyTemplate(newDevice, template) {
 				var characteristicEntry=template.AddServices[i].AddCharacteristics[j];
 				if (Characteristic[characteristicEntry.name]!==undefined) {
 					var mycharacteristic = myService.getCharacteristic(Characteristic[characteristicEntry.name]);
-					if (characteristicEntry["read"]!==undefined)
+					//if (characteristicEntry["read"]!==undefined)
 					//Need to define this manually from the config. Must pass a callback to the action.
-					//characteristicEntry["read"]
-					//characteristicEntry["write"]
-
+					var device = newDevice.context;
+					var readFunction = null;
+					var writeFunction = null;
+					if (characteristicEntry["read"]) eval('readFunction = function(callback) { '+ characteristicEntry["read"]+'}')
+					if (characteristicEntry["write"]) eval('writeFunction = function(value, callback) { '+ characteristicEntry["write"]+'}')
+					if (readFunction) mycharacteristic.on('get', readFunction );
+					if (writeFunction) mycharacteristic.on('set', writeFunction);
 					
-					thisCharacteristic.on('get', function(callback) { callback(null, parseInt(that.device.attributes.level)); });
-            		thisCharacteristic.on('set', function(value, callback) { that.platform.api.runCommand(callback, that.deviceid, "setLevel", { value1: value }); });
-			
 				}
 			}
 		}
@@ -137,6 +142,7 @@ function applyTemplate(newDevice, template) {
 					newDevice.context.lastTime=stDevice.basename;
 					newDevice.context.status=stDevice.status;
 					newDevice.context.discoveredTemplates=[];
+					
 					var TemplatesToApply = [];
 					//First check by DeviceID
 					if (deviceTemplates.TemplateRulesByDeviceID[newDevice.context.uuid]!==undefined)
@@ -154,10 +160,13 @@ function applyTemplate(newDevice, template) {
 						}
 					}
 
-					if (newDevice.context.discoveredTemplates.length>0) {
+					if ((newDevice.context.discoveredTemplates!==undefined)&&(newDevice.context.discoveredTemplates.length>0)) {
 						for (myTemplate in newDevice.context.discoveredTemplates)
 							applyTemplate(newDevice,deviceTemplates.Templates[newDevice.context.discoveredTemplates[myTemplate]]);
-						rawList[newDevice.context.uuid]=applyTemplate;
+						if (newDevice.services.length>1) {
+							rawList[newDevice.context.uuid]=newDevice;
+							foundAccessories.push(newDevice);
+						}
 						console.log("Discovered device: "+newDevice.context.name);
 					} else {
 						console.log("Unable to discover for device: "+newDevice.context.name);
@@ -173,7 +182,7 @@ function applyTemplate(newDevice, template) {
 			if (callback)
 				callback(foundAccessories)
 			that.firstpoll = false;
-			rawList["d38a5ae8-9533-43cd-b573-f5625aa07695"].context.actions.off();
+			//rawList["d38a5ae8-9533-43cd-b573-f5625aa07695"].context.actions.off();
 		});
 	},
 	accessories: function (callback) {
@@ -193,7 +202,7 @@ function applyTemplate(newDevice, template) {
 
 		smartthings.init(this.app_url, this.app_id, this.access_token);
 
-		this.reloadData();
+		this.reloadData(callback);
 	},
 	addAttributeUsage: function(attribute, deviceid, mycharacteristic) {
 		if (!this.attributeLookup[attribute])

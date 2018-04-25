@@ -12,7 +12,7 @@
       "Cree Bulb": ["LightBulb", "LightBulb_brightness"]
     },
     "TemplateRulesByDeviceInterrogation": [
-        { "InterrogationFunction": "return (device.attributes['hue']!==undefined)", "Templates": ["LightBulb"] }
+        { "InterrogationFunction": "return (device.capabilities['Color Control']!==undefined)", "Templates": ["LightBulb"] }
     ],
     "Templates": {
       "LightBulb": {
@@ -24,8 +24,8 @@
             "AddCharacteristics": [
               {
                 "name": "On",
-                "read": "return (device.attributes.switch == 'on');",
-                "write": "if (value) { device.action.on(); } else { device.action.off() }",
+                "read": "callback(null, (device.attributes.switch == 'on'));",
+                "write": "if (value) { device.action.on(callback); } else { device.action.off(callback) }",
                 "usedAttributes": [
                   "switch"
                 ]
@@ -35,16 +35,15 @@
         ]
       },
       "LightBulb_brightness": {
-        "templateType": "Main",
         "platform": "SmartThings",
-        "AddServices": [
+        "GetServices": [
           {
             "ServiceName": "Lightbulb",
             "AddCharacteristics": [
               {
                 "name": "Brightness",
-                "read": "return (device.attributes.level);",
-                "write": "device.action.setLevel(value);",
+                "read": "callback(null, (device.attributes.level));",
+                "write": "device.action.setLevel(callback, value);",
                 "usedAttributes": [
                   "level"
                 ]
@@ -54,16 +53,15 @@
         ]
       },
       "LightBulb_Color": {
-        "templateName": "LightBulb_Color",
-        "templateType": "Addon",
-        "AddServices": [
+        "platform": "SmartThings",
+        "GetServices": [
           {
             "ServiceName": "Lightbulb",
             "AddCharacteristics": [
               {
                 "name": "Hue",
-                "read": "return Math.round(device.attributes.hue*3.6);",
-                "write": "device.actions.setHue(Math.round(value/3.6));",
+                "read": "callback(null, Math.round(device.attributes.hue*3.6));",
+                "write": "device.actions.setHue(callback, Math.round(value/3.6));",
                 "usedAttributes": [
                   "hue"
                 ]
@@ -74,6 +72,384 @@
                 "write": "device.actions.setSaturation(value);",
                 "usedAttributes": [
                   "saturation"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "Shades": {
+        "platform": "SmartThings",
+        "AddServices": [
+          {
+            "ServiceName": "",
+            "AddCharacteristics": [
+              {
+                "name": "",
+                "read": "",
+                "write": "",
+                "usedAttributes": [
+                  ""
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "Fans": {
+        "platform": "SmartThings",
+        "AddServices": [
+          {
+            "ServiceName": "",
+            "AddCharacteristics": [
+              {
+                "name": "",
+                "read": "",
+                "write": "",
+                "usedAttributes": [
+                  ""
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "Garage Door": {
+        "platform": "SmartThings",
+        "AddServices": [
+          {
+            "ServiceName": "",
+            "AddCharacteristics": [
+              {
+                "name": "",
+                "read": "",
+                "write": "",
+                "usedAttributes": [
+                  ""
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "Lock": {
+        "platform": "SmartThings",
+        "AddServices": [
+          {
+            "ServiceName": "",
+            "AddCharacteristics": [
+              {
+                "name": "",
+                "read": "",
+                "write": "",
+                "usedAttributes": [
+                  ""
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "Button": {
+        "platform": "SmartThings",
+        "AddServices": [
+          {
+            "ServiceName": "",
+            "AddCharacteristics": [
+              {
+                "name": "",
+                "read": "",
+                "write": "",
+                "usedAttributes": [
+                  ""
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "Switch": {
+        "platform": "SmartThings",
+        "AddServices": [
+          {
+            "ServiceName": "",
+            "AddCharacteristics": [
+              {
+                "name": "",
+                "read": "",
+                "write": "",
+                "usedAttributes": [
+                  ""
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "Smoke Detector": {
+        "platform": "SmartThings",
+        "AddServices": [
+          {
+            "ServiceName": "",
+            "AddCharacteristics": [
+              {
+                "name": "",
+                "read": "",
+                "write": "",
+                "usedAttributes": [
+                  ""
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "Carbon Monoxide Detector": {
+        "platform": "SmartThings",
+        "AddServices": [
+          {
+            "ServiceName": "",
+            "AddCharacteristics": [
+              {
+                "name": "",
+                "read": "",
+                "write": "",
+                "usedAttributes": [
+                  ""
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "Motion Sensor": {
+        "platform": "SmartThings",
+        "AddServices": [
+          {
+            "ServiceName": "",
+            "AddCharacteristics": [
+              {
+                "name": "",
+                "read": "",
+                "write": "",
+                "usedAttributes": [
+                  ""
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "Water Sensor": {
+        "platform": "SmartThings",
+        "AddServices": [
+          {
+            "ServiceName": "",
+            "AddCharacteristics": [
+              {
+                "name": "",
+                "read": "",
+                "write": "",
+                "usedAttributes": [
+                  ""
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "Presence Sensor": {
+        "platform": "SmartThings",
+        "AddServices": [
+          {
+            "ServiceName": "",
+            "AddCharacteristics": [
+              {
+                "name": "",
+                "read": "",
+                "write": "",
+                "usedAttributes": [
+                  ""
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "Humidity Sensor": {
+        "platform": "SmartThings",
+        "AddServices": [
+          {
+            "ServiceName": "",
+            "AddCharacteristics": [
+              {
+                "name": "",
+                "read": "",
+                "write": "",
+                "usedAttributes": [
+                  ""
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "Temperature Sensor": {
+        "platform": "SmartThings",
+        "AddServices": [
+          {
+            "ServiceName": "",
+            "AddCharacteristics": [
+              {
+                "name": "",
+                "read": "",
+                "write": "",
+                "usedAttributes": [
+                  ""
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "Light Sensor": {
+        "platform": "SmartThings",
+        "AddServices": [
+          {
+            "ServiceName": "",
+            "AddCharacteristics": [
+              {
+                "name": "",
+                "read": "",
+                "write": "",
+                "usedAttributes": [
+                  ""
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "Contact Sensor": {
+        "platform": "SmartThings",
+        "AddServices": [
+          {
+            "ServiceName": "",
+            "AddCharacteristics": [
+              {
+                "name": "",
+                "read": "",
+                "write": "",
+                "usedAttributes": [
+                  ""
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "Battery": {
+        "platform": "SmartThings",
+        "AddServices": [
+          {
+            "ServiceName": "",
+            "AddCharacteristics": [
+              {
+                "name": "",
+                "read": "",
+                "write": "",
+                "usedAttributes": [
+                  ""
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "Energy Meter": {
+        "platform": "SmartThings",
+        "AddServices": [
+          {
+            "ServiceName": "",
+            "AddCharacteristics": [
+              {
+                "name": "",
+                "read": "",
+                "write": "",
+                "usedAttributes": [
+                  ""
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "Power Meter": {
+        "platform": "SmartThings",
+        "AddServices": [
+          {
+            "ServiceName": "",
+            "AddCharacteristics": [
+              {
+                "name": "",
+                "read": "",
+                "write": "",
+                "usedAttributes": [
+                  ""
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "Acceleration Sensor": {
+        "platform": "SmartThings",
+        "AddServices": [
+          {
+            "ServiceName": "",
+            "AddCharacteristics": [
+              {
+                "name": "",
+                "read": "",
+                "write": "",
+                "usedAttributes": [
+                  ""
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "Tilt Sensor": {
+        "platform": "SmartThings",
+        "AddServices": [
+          {
+            "ServiceName": "",
+            "AddCharacteristics": [
+              {
+                "name": "",
+                "read": "",
+                "write": "",
+                "usedAttributes": [
+                  ""
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "Thermostat": {
+        "platform": "SmartThings",
+        "AddServices": [
+          {
+            "ServiceName": "",
+            "AddCharacteristics": [
+              {
+                "name": "",
+                "read": "",
+                "write": "",
+                "usedAttributes": [
+                  ""
                 ]
               }
             ]

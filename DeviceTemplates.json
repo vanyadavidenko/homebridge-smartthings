@@ -9,7 +9,10 @@
       ]
     },
     "TemplateRulesByDeviceType": {
-      "Cree Bulb": ["LightBulb", "LightBulb_brightness"]
+      "Cree Bulb": ["LightBulb", "LightBulb_brightness"],
+      "Dimmer Switch": ["LightBulb", "LightBulb_brightness"],
+      "Lutron Caseta Wall Dimmer": ["LightBulb", "LightBulb_brightness"],
+      "Z-Wave Switch Generic": ["LightBulb"]
     },
     "TemplateRulesByDeviceInterrogation": [
         { "InterrogationFunction": "return (device.capabilities['Color Control']!==undefined)", "Templates": ["LightBulb"] }
@@ -25,7 +28,7 @@
               {
                 "name": "On",
                 "read": "callback(null, (device.attributes.switch == 'on'));",
-                "write": "if (value) { device.action.on(callback); } else { device.action.off(callback) }",
+                "write": "if (value) { device.actions.on(callback); } else { device.actions.off(callback) }",
                 "usedAttributes": [
                   "switch"
                 ]
@@ -43,7 +46,7 @@
               {
                 "name": "Brightness",
                 "read": "callback(null, (device.attributes.level));",
-                "write": "device.action.setLevel(callback, value);",
+                "write": "device.actions.setLevel(callback, value);",
                 "usedAttributes": [
                   "level"
                 ]
